@@ -1,0 +1,5 @@
+[12-Mar-2025 21:11:40 Asia/Jakarta] PHP Notice:  Undefined index: log_path in /home/hopz5883/public_html/percasi.my.id/system/core/Log.php on line 127
+[12-Mar-2025 21:11:40 Asia/Jakarta] PHP Notice:  Undefined index: log_path in /home/hopz5883/public_html/percasi.my.id/system/core/Log.php on line 127
+[12-Mar-2025 21:11:40 Asia/Jakarta] PHP Warning:  mkdir(): Invalid path in /home/hopz5883/public_html/percasi.my.id/system/core/Log.php on line 131
+[12-Mar-2025 21:11:40 Asia/Jakarta] PHP Notice:  Undefined index: log_threshold in /home/hopz5883/public_html/percasi.my.id/system/core/Log.php on line 138
+[12-Mar-2025 21:11:40 Asia/Jakarta] PHP Notice:  Undefined index: log_threshold in /home/hopz5883/public_html/percasi.my.id/system/core/Log.php on line 142
