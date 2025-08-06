@@ -1926,11 +1926,97 @@ class Admin extends CI_Controller
 				//echo json_encode($hasil); die();
 				if ($tg=='scr')
 				{
-					$this->load->view('admin_event_iuran_detail_tagihan', $this->data);
+					$this->load->view('adm_event_iuran_detail_tagihan', $this->data);
 				}
 				else
 				{
-					$this->load->view('admin_event_iuran_detail_tagihan_ctk', $this->data);
+					$this->load->view('adm_event_iuran_detail_tagihan_ctk', $this->data);
+				}
+			}
+		}
+    }
+
+    public function event_akomodasi($idiuran = false, $tg = 'scr')
+    {
+         $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?",$idiuran)->row_array();
+        $idev = $data['id_ev'];
+        $idprov = $data['id_prov'];
+        if ($idev===false) { } else
+		{
+			$h=$this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
+			if ($h->num_rows()==0)
+			{
+				$_SESSION['POPUP_MSG']='Data events tidak tersedia...';
+				$_SESSION['POPUP_CLR']='error';
+				redirect('opr/event/0');
+			}
+			else
+			{
+				$this->data['DtEvent']=$h->row_array();
+				$stev=$this->data['DtEvent']['status_ev'];
+				$h=$this->db->query("SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
+							 gelarev AS b,  kategoriev AS d,akomodasiev c WHERE a.id_ev=? AND a.id_prov=? AND
+							a.id_gelar_ev=b.id_gelar_ev AND a.id_ktg_ev=d.id_ktg_ev AND a.id_akomodasi_ev=c.id_akomodasi_ev
+							ORDER BY a.nama_pst ASC", 
+							array($idev, $idprov));
+				
+				$this->data['JmlPst']=$h->num_rows();
+				$this->data['DtPst']=$h->result();
+				$this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?",$idprov)->row_array();
+				
+				$this->data['MnuAktif']='Event';
+				$this->data['SubMnuAktif']='Event'.$stev;
+				//echo json_encode($hasil); die();
+				if ($tg=='scr')
+				{
+					$this->load->view('adm_event_akomodasi', $this->data);
+				}
+				else
+				{
+					$this->load->view('adm_event_akomodasi_ctk', $this->data);
+				}
+			}
+		}
+    }
+
+    public function event_registrasi($idiuran = false, $tg = 'scr')
+    {
+         $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?",$idiuran)->row_array();
+        $idev = $data['id_ev'];
+        $idprov = $data['id_prov'];
+        if ($idev===false) { } else
+		{
+			$h=$this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
+			if ($h->num_rows()==0)
+			{
+				$_SESSION['POPUP_MSG']='Data events tidak tersedia...';
+				$_SESSION['POPUP_CLR']='error';
+				redirect('opr/event/0');
+			}
+			else
+			{
+				$this->data['DtEvent']=$h->row_array();
+				$stev=$this->data['DtEvent']['status_ev'];
+				$h=$this->db->query("SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
+							 gelarev AS b,  kategoriev AS d,akomodasiev c WHERE a.id_ev=? AND a.id_prov=? AND
+							a.id_gelar_ev=b.id_gelar_ev AND a.id_ktg_ev=d.id_ktg_ev AND a.id_akomodasi_ev=c.id_akomodasi_ev
+							ORDER BY a.nama_pst ASC", 
+							array($idev, $idprov));
+				
+				$this->data['JmlPst']=$h->num_rows();
+				$this->data['DtPst']=$h->result();
+				$this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?",$idprov)->row_array();
+				
+				$this->data['MnuAktif']='Event';
+				$this->data['SubMnuAktif']='Event'.$stev;
+				//echo json_encode($hasil); die();
+				if ($tg=='scr')
+				{
+					$this->load->view('adm_event_registrasi', $this->data);
+				}
+				else
+				{
+					$this->load->view('adm_event_registrasi_ctk', $this->data);
 				}
 			}
 		}

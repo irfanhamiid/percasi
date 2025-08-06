@@ -20,16 +20,16 @@ $statusclr=array('secondary', 'info', 'success');
 		}
 		else
 		{
-			echo '<span class="btn btn-danger btn-xs">Belum ada poster !</span>';
+			echo '<span class="btn btn-danger btn-sm">Belum ada poster ! </span> ';
 		}
 		$fn='pdf/'.$DtEvent['id_ev'].'.pdf';
 		if (file_exists('./'.$fn))
 		{
-			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-xs"><i class="mdi mdi-file-pdf-box"></i> Proposal</a>';
+			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-sm"><i class="mdi mdi-file-pdf-box"></i> Proposal</a>';
 		}
 		else
 		{
-			echo '<span class="btn btn-danger btn-xs">Belum ada proposal !</span>';
+			echo '<span class="btn btn-danger btn-sm">Belum ada proposal ! </span>';
 		}
 		?>
 		</p>

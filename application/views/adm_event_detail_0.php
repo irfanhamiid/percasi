@@ -15,7 +15,7 @@ include ('adm_awal.php');
 		if ($_SESSION['TP_ADMIN']==3)
 		{
 			?>
-			<a href="#" class="btn btn-xs btn-danger" title="Hapus"
+			<a href="#" class="btn btn-danger btn-sm" title="Hapus"
 				onclick="return hapusevent('<?= $DtEvent['id_ev'];?>','<?= $DtEvent['nama_ev'];?>');">
 				<i class="mdi mdi-trash-can"></i> Hapus</a>
 		<?php
