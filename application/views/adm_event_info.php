@@ -13,10 +13,10 @@ $statusclr=array('secondary', 'info', 'success');
 		<p><span class="badge bg-<?= $statusclr[$DtEvent['status_ev']];?>"><?= $statusev[$DtEvent['status_ev']];?></span></p>
 		<p>
 		<?php
-		$fn='img/poster/'.$DtEvent['id_ev'].'.jpg';
+		$fn='img/poster/'.$DtEvent['poster'];
 		if (file_exists('./'.$fn))
 		{
-			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-xs me-1"><i class="mdi mdi-image"></i> Poster</a>';
+			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-sm me-1"><i class="mdi mdi-image"></i> Poster</a>';
 		}
 		else
 		{

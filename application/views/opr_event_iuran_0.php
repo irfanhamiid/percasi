@@ -25,7 +25,7 @@ include ('opr_awal.php'); ?>
   <div class="card-body">
 	<ul class="nav nav-tabs">
 	  <li class="nav-item">
-		<a class="nav-link" href="<?= base_url();?>opr/event_detail/<?= $DtEvent['id_ev'];?>">Kategori</a>
+		<a class="nav-link" href="<?= base_url();?>opr/event_detail/<?= $DtEvent['id_ev'];?>">Kategori Dan Gelar</a>
 	  </li>
 	   <li class="nav-item">
 		<a class="nav-link" href="<?= base_url();?>opr/event_peserta/<?= $DtEvent['id_ev'];?>">Peserta Provinsi <?= $_SESSION['NMPROV_OPR'];?></a>
@@ -45,10 +45,13 @@ include ('opr_awal.php'); ?>
 			<i class="mdi mdi-printer"></i> Cetak</a>
 		</p>
 	<?php
+	if($DtIuran != null){
 	$kurang_wjb=$DtIuran['jml_wajib']-$DtIuran['byr_wajib'];
 	$kurang_reg=$DtIuran['jml_registrasi']-$DtIuran['byr_registrasi'];
-	$kurang_akomodasi=$DtIuran['jml_akomodasi']-$DtIuran['byr_akomodasi'];
-	
+	$kurang_akomodasi=$DtIuran['jml_registrasi']-$DtIuran['byr_akomodasi'];
+	}else{
+		
+	}
 	if ($JmlIuran==0)
 	{
 		echo '<div class="alert alert-danger">Belum ada data iuran event...</div>';

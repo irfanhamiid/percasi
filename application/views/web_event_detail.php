@@ -1,7 +1,7 @@
 <?php
 $CI =& get_instance();
 $CI->load->model('Mymodel');
-$g='/img/poster/'.$DtEvent['id_ev'].'_thumb.jpg';
+$g='/img/poster/'.$DtEvent['poster'];
 if (file_exists('.'.$g))
 {
 	$posterthumb=base_url().$g;
@@ -10,7 +10,7 @@ else
 {
 	$posterthumb=base_url().'/img/noimage.jpg/';
 }	
-$g='/img/poster/'.$DtEvent['id_ev'].'.jpg';
+$g='/img/poster/'.$DtEvent['poster'];
 if (file_exists('.'.$g))
 {
 	$poster=base_url().$g;

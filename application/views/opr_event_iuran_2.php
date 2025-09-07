@@ -25,7 +25,7 @@ include ('opr_awal.php'); ?>
   <div class="card-body">
 	<ul class="nav nav-tabs">
 	  <li class="nav-item">
-		<a class="nav-link" href="<?= base_url();?>opr/event_detail/<?= $DtEvent['id_ev'];?>">Kategori</a>
+		<a class="nav-link" href="<?= base_url();?>opr/event_detail/<?= $DtEvent['id_ev'];?>">Kategori Dan Gelar</a>
 	  </li>
 	   <li class="nav-item">
 		<a class="nav-link" href="<?= base_url();?>opr/event_peserta/<?= $DtEvent['id_ev'];?>">Peserta Provinsi <?= $_SESSION['NMPROV_OPR'];?></a>

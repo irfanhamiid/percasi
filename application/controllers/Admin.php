@@ -2199,7 +2199,7 @@ class Admin extends CI_Controller
                 redirect('admin/event/0');
             }
             $dtbyr = $h->row_array();
-            $this->db->query("UPDATE iuranev_byr SET id_admin=0, status_verifikasi=0, tgl_verifikasi='' WHERE id_byr=?", $idbyr);
+            $this->db->query("UPDATE iuranev_byr SET id_admin=1, status_verifikasi=0, tgl_verifikasi='' WHERE id_byr=?", $idbyr);
             $this->hitung_iuran_ev($dtbyr['id_ev']);
 
             redirect('admin/event_iuran_detail/' . $dtbyr['id_iuran_ev']);

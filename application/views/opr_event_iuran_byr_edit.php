@@ -105,7 +105,7 @@ include ('opr_awal.php'); ?>
 		<p class="text-center mt-4">
 			<a href="<?= base_url();?>opr/event_iuran/<?= $DtEvent['id_ev'];?>" class="btn btn-danger" >
 				<i class="mdi mdi-close"></i> Batal</a>
-			<button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i> Smpan</button>
+			<button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i> Simpan</button>
 		</p>
 		<input type="hidden" name="idev" value="<?= $DtEvent['id_ev'];?>"/>
 		<input type="hidden" name="stev" value="<?= $DtEvent['status_ev'];?>"/>

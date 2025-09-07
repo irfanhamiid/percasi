@@ -26,7 +26,7 @@ include ('web_awal.php');
 				$stclr=array('info', 'primary', 'success');
 				foreach ($DtEvent as $b)
 				{
-					$poster='/img/poster/'.$b->id_ev.'_thumb.jpg';
+					$poster='/img/poster/'.$b->poster;
 					if (file_exists('.'.$poster))
 					{
 						$fposter=base_url().$poster;

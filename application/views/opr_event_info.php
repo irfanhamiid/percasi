@@ -13,23 +13,23 @@ $statusclr=array('secondary', 'info', 'success');
 		<p><span class="badge bg-<?= $statusclr[$DtEvent['status_ev']];?>"><?= $statusev[$DtEvent['status_ev']];?></span></p>
 		<p>
 		<?php
-		$fn='img/poster/'.$DtEvent['id_ev'].'.jpg';
+		$fn='img/poster/'.$DtEvent['poster'];
 		if (file_exists('./'.$fn))
 		{
-			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-xs me-1"><i class="mdi mdi-image"></i> Poster</a>';
+			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-sm me-1"><i class="mdi mdi-image"></i> Poster</a>';
 		}
 		else
 		{
-			echo '<span class="btn btn-danger btn-xs">Belum ada poster !</span>';
+			echo '<span class="btn btn-danger btn-sm">Belum ada poster !</span>';
 		}
 		$fn='pdf/'.$DtEvent['id_ev'].'.pdf';
 		if (file_exists('./'.$fn))
 		{
-			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-xs"><i class="mdi mdi-file-pdf-box"></i> Proposal</a>';
+			echo '<a href="'.base_url().$fn.'" target="_blank" class="btn btn-info btn-sm"><i class="mdi mdi-file-pdf-box"></i> Proposal</a>';
 		}
 		else
 		{
-			echo '<span class="btn btn-danger btn-xs">Belum ada proposal !</span>';
+			echo '<span class="btn btn-danger btn-sm">Belum ada proposal !</span>';
 		}
 		?>
 		</p>

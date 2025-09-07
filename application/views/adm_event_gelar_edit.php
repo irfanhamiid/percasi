@@ -58,7 +58,7 @@ include ('adm_awal.php'); ?>
 				</fieldset>
 				<p class="text-center mt-4">
 					<a href="<?= base_url();?>admin/event_detail/<?= $DtGelar['id_ev'];?>" class="btn btn-danger btn-sm" > <i class="mdi mdi-close"></i> Batal</a>	
-					<button type="submit" class="btn btn-primary btn-sm"><i class="mdi mdi-check"></i> Smpan</button>
+					<button type="submit" class="btn btn-primary btn-sm"><i class="mdi mdi-check"></i> Simpan</button>
 				</p>
 				<input type="hidden" name="idev" value="<?= $DtGelar['id_ev'];?>"/>
 				<input type="hidden" name="idglr" value="<?= $DtGelar['id_gelar_ev'];?>"/>

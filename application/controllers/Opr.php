@@ -506,7 +506,9 @@ class Opr extends CI_Controller {
 				$this->data['DtIuran']=$dtiuran;
 				$this->data['JmlIuran']=$j;
 				//bayar
+				if($dtiuran != null){
 				$p=array( $dtiuran['id_iuran_ev'], $_SESSION['IDPROV_OPR']);
+				}
 				$h=$this->db->query("SELECT a.*, b.nama_admin FROM iuranev_byr AS a, admin AS b WHERE a.id_iuran_ev=? AND a.id_prov=? AND a.jenis_byr=1 
 					AND a.id_admin=b.id_admin ORDER BY a.id_byr ASC", $p);				
 				$this->data['DtByrWjb']=$h->result();

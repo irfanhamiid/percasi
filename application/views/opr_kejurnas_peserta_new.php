@@ -68,7 +68,7 @@ include ('opr_awal.php'); ?>
 			</div>
 		</div>
 		<p class="text-center mt-4">
-			<button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i> Smpan</button>
+			<button type="submit" class="btn btn-primary"><i class="mdi mdi-check"></i> Simpan</button>
 		</p>
 		<input type="hidden" name="idkj" value="<?= $DtKj['id_kj'];?>"/>
 		<input type="hidden" name="stkj" value="<?= $DtKj['status_kj'];?>"/>
