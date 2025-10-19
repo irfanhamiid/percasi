@@ -29,6 +29,9 @@ include ('adm_awal.php'); ?>
 		<a class="nav-link" href="<?= base_url();?>admin/event_peserta/<?= $DtEvent['id_ev'];?>">Peserta</a>
 	  </li>
 	  <li class="nav-item">
+				<a class="nav-link" href="<?= base_url(); ?>admin/event_peserta_penataran/<?= $DtEvent['id_ev']; ?>">Peserta Penataran</a>
+			</li>
+	  <li class="nav-item">
 		<a class="nav-link" href="<?= base_url();?>admin/event_time/<?= $DtEvent['id_ev'];?>">Time Line</a>
 	  </li>
 	  <li class="nav-item">
@@ -58,6 +61,12 @@ include ('adm_awal.php'); ?>
 		<tr><td>2.</td><td>Registrasi</td><td class="text-end"><?= number_format($JmlIuranReg,0,',','.');?></td><td></td></tr>
 		<tr><td>3.</td><td>Akomodasi</td><td class="text-end"><?= number_format($JmlAkomodasi,0,',','.');?></td><td></td></tr>
 		<tr><td>4.</td><td>Penerimaan Lain</td><td class="text-end"><?= number_format($JmlPenLain,0,',','.');?></td><td></td></tr>
+		<tr>
+				<td>5.</td>
+				<td>Penataran</td>
+				<td class="text-end"><?= number_format($JmlPenataran, 0, ',', '.'); ?></td>
+				<td></td>
+			</tr>
 		<tr><td></td><th>Jumlah Penerimaan</th><th></th><th class="text-end"><?= number_format($JmlPenerimaan,0,',','.');?></th></tr>
 		<tr><th colspan="4">PENGELUARAN</th></tr>
 		<tr><td>1.</td><td>Pengeluaran Kas</td><td></td><td class="text-end"><?= number_format($JmlKasKeluar,0,',','.');?></td></tr>

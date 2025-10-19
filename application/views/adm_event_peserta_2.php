@@ -38,6 +38,9 @@ include ('adm_awal.php');
 		<a class="nav-link active" aria-current="page" href="#"><b>Peserta</b></a>
 	  </li>
 	  <li class="nav-item">
+				<a class="nav-link" href="<?= base_url(); ?>admin/event_peserta_penataran/<?= $DtEvent['id_ev']; ?>">Peserta Penataran</a>
+			</li>
+	  <li class="nav-item">
 		<a class="nav-link" href="<?= base_url();?>admin/event_winner/<?= $DtEvent['id_ev'];?>">Pemenang</a>
 	  </li>
 	  <li class="nav-item">

@@ -564,6 +564,9 @@ class Admin extends CI_Controller
                 $h = $this->db->query('SELECT * FROM gelarev WHERE id_ev=? ORDER BY gelar ASC', $idev);
                 $this->data['JmlGelar'] = $h->num_rows();
                 $this->data['DtGelar'] = $h->result();
+                $h = $this->db->query("SELECT * FROM penataran WHERE id_event=? ORDER BY nama_penataran ASC", $idev);
+                $this->data['JmlPenataran'] = $h->num_rows();
+                $this->data['DtPenataran'] = $h->result();
 
                 $this->data['MnuAktif'] = 'Event';
                 $this->data['SubMnuAktif'] = 'Event' . $stev;
@@ -727,6 +730,82 @@ class Admin extends CI_Controller
             $this->hitung_iuran_ev($d['id_ev']);
 
             redirect('admin/event_detail/' . $d['id_ev']);
+        }
+    }
+
+    // Penataran
+
+    public function event_penataran_new($idev = false)
+    {
+        if (isset($_POST['idev'])) {
+            $this->load->model('Mymodel');
+            $id = $_POST['idev'] . $this->Mymodel->urut_saja('EIDPEN', 99);
+            $p = [$id, $_POST['idev'], $_POST['nama_penataran'], $_POST['biaya']];
+            $this->db->query(
+                "INSERT INTO penataran (id_penataran, id_event, nama_penataran, biaya)
+        				VALUES (?, ?, ?, ?)",
+                $p,
+            );
+            redirect('admin/event_detail/' . $_POST['idev']);
+        }
+        if ($idev === false) {
+        } else {
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND a.id_admin=b.id_admin
+        				LIMIT 0,1",
+                $idev,
+            );
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data events tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('admin/event_new');
+            } else {
+                $this->data['DtEvent'] = $h->row_array();
+                $this->data['MnuAktif'] = 'Event';
+                $this->data['SubMnuAktif'] = 'Event' . $this->data['DtEvent']['status_ev'];
+                $this->load->view('adm_event_penataran_new', $this->data);
+            }
+        }
+    }
+
+    public function event_penataran_edit($idglr = false)
+    {
+        if (isset($_POST['idglr'])) {
+            $p = [$_POST['nama_penataran'], $_POST['biaya'], $_POST['idglr']];
+            $this->db->query('UPDATE penataran SET nama_penataran=?, biaya=? WHERE id_penataran=?', $p);
+            redirect('admin/event_detail/' . $_POST['idev']);
+        }
+        if ($idglr === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM penataran WHERE id_penataran=? LIMIT 0,1', $idglr);
+            $d = $h->row_array();
+            $this->data['DtPenataran'] = $d;
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND a.id_admin=b.id_admin
+        				LIMIT 0,1",
+                $d['id_event'],
+            );
+            $this->data['DtEvent'] = $h->row_array();
+            $this->data['MnuAktif'] = 'Event';
+            $this->data['SubMnuAktif'] = 'Event' . $this->data['DtEvent']['status_ev'];
+            $this->load->view('adm_event_penataran_edit', $this->data);
+        }
+    }
+
+    public function event_penataran_del($id_penataran = false)
+    {
+        if ($id_penataran === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM penataran WHERE id_penataran=? LIMIT 0,1', $id_penataran);
+            $d = $h->row_array();
+            //hapus kategori
+            $h = $this->db->query('DELETE FROM penataran WHERE id_penataran=?', $id_penataran);
+            //hapus peserta
+            $h = $this->db->query('DELETE FROM peserta_penataran WHERE id_penataran=?', $id_penataran);
+
+            $this->hitung_iuran_ev($d['id_event']);
+
+            redirect('admin/event_detail/' . $d['id_event']);
         }
     }
 
@@ -1185,6 +1264,73 @@ class Admin extends CI_Controller
         }
     }
 
+    public function event_peserta_penataran($idev = false, $idprov = 0, $tg = 'scr')
+    {
+        if (isset($_POST['idprov'])) {
+            $idev = $_POST['idev'];
+            $idprov = $_POST['idprov'];
+        }
+        if ($idev === false) {
+        } else {
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND a.id_admin=b.id_admin
+        				LIMIT 0,1",
+                $idev,
+            );
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data events tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('admin/event/0');
+            } else {
+                $this->data['DtEvent'] = $h->row_array();
+                $stev = $this->data['DtEvent']['status_ev'];
+
+                if ($idprov == 0) {
+                    $h = $this->db->query(
+                        "SELECT a.*,b.nama_penataran,c.provinsi FROM penataran_peserta a, 
+        							 penataran b, provinsi c WHERE a.id_event=? AND
+        							 a.id_provinsi=c.id_prov AND a.id_penataran=b.id_penataran
+        							ORDER BY c.provinsi ASC",
+                        $idev,
+                    );
+                } else {
+                    $p = [$idev, $idprov];
+                    $h = $this->db->query(
+                        "SELECT a.*,b.nama_penataran,c.provinsi FROM penataran_peserta a, 
+        							 penataran b, provinsi c WHERE a.id_event=? AND
+        							 a.id_provinsi=c.id_prov AND a.id_penataran=b.id_penataran AND a.id_provinsi=?
+        							ORDER BY c.provinsi ASC",
+                        $p,
+                    );
+                }
+
+                //echo json_encode($hasil); die();
+
+                $this->data['JmlPst'] = $h->num_rows();
+                $this->data['DtPst'] = $h->result();
+
+                $h = $this->db->query('SELECT * FROM provinsi WHERE id_prov>1 ORDER BY provinsi ASC');
+                $this->data['DtProv'] = $h->result();
+                if ($idprov == 0) {
+                    $this->data['NamaProv'] = 'Semua';
+                } else {
+                    $h = $this->db->query('SELECT * FROM provinsi WHERE id_prov=?LIMIT 0,1', $idprov);
+                    $d = $h->row_array();
+                    $this->data['NamaProv'] = $d['provinsi'];
+                }
+
+                $this->data['IdProvNya'] = $idprov;
+                $this->data['MnuAktif'] = 'Event';
+                $this->data['SubMnuAktif'] = 'Event' . $stev;
+                if ($tg == 'scr') {
+                    $this->load->view('adm_event_peserta_penataran_' . $stev, $this->data);
+                } else {
+                    $this->load->view('adm_event_peserta_penataran_ctk', $this->data);
+                }
+            }
+        }
+    }
+
     public function event_peserta_new($idev = false, $idprov = false)
     {
         if (isset($_POST['idev'])) {
@@ -1312,6 +1458,213 @@ class Admin extends CI_Controller
                 $this->db->query('UPDATE kategoriev SET jml_peserta=jml_peserta-1 WHERE id_ktg_ev=?', $dt['id_ktg_ev']);
                 $this->hitung_iuran_ev($dt['id_ev']);
                 redirect('admin/event_peserta/' . $dt['id_ev'] . '/' . $dt['id_prov'] . '/scr');
+            }
+        }
+    }
+
+    public function event_peserta_penataran_new($idev = false, $idprov = false)
+    {
+        // Jika form dikirim (submit)
+        if (isset($_POST['idev'])) {
+            $this->load->model('Mymodel');
+
+            // === Upload KTP ===
+            $fn1 = $_FILES['file_ktp']['tmp_name'];
+            $fz1 = $_FILES['file_ktp']['size'];
+            $fext1 = pathinfo($_FILES['file_ktp']['name'], PATHINFO_EXTENSION);
+            $file_ktp = 'KTP' . $this->Mymodel->urut('EIDKTP', 9999);
+
+            // === Upload Rekomendasi ===
+            $fn2 = $_FILES['file_rekom']['tmp_name'];
+            $fz2 = $_FILES['file_rekom']['size'];
+            $fext2 = pathinfo($_FILES['file_rekom']['name'], PATHINFO_EXTENSION);
+            $file_rekom = 'RKM' . $this->Mymodel->urut('EIDRKM', 9999);
+
+            // === Upload Foto ===
+            $fn3 = $_FILES['file_foto']['tmp_name'];
+            $fz3 = $_FILES['file_foto']['size'];
+            $fext3 = pathinfo($_FILES['file_foto']['name'], PATHINFO_EXTENSION);
+            $file_foto = 'PFT' . $this->Mymodel->urut('EIDPFT', 9999);
+
+            // === ID Peserta ===
+            $idpst = 'EPP' . $this->Mymodel->urut('EIDPP', 9999);
+
+            // === Data Peserta ===
+            $p = [
+                $idpst,
+                $_POST['idprov'],
+                $_POST['id_penataran'],
+                $_POST['idev'],
+                $_POST['tempat_lahir'],
+                $_POST['tanggal_lahir'],
+                $_POST['nama_peserta'],
+                $_POST['jenis_kelamin'],
+                $file_ktp . '.' . $fext1,
+                $file_rekom . '.' . $fext2,
+                $file_foto . '.' . $fext3,
+            ];
+
+            // === Simpan ke Database ===
+            $this->db->query("INSERT INTO penataran_peserta (id_peserta, id_provinsi, id_penataran, id_event, tempat_lahir, tanggal_lahir, nama_peserta, jenis_kelamin, file_ktp, file_rekom, file_foto) VALUES (?,?,?,?,?,?,?,?,?,?,?)", $p);
+
+            // === Pindahkan File ===
+            if ($fz1 > 0) move_uploaded_file($fn1, 'img/ktp/' . $file_ktp . '.' . $fext1);
+            if ($fz2 > 0) move_uploaded_file($fn2, 'img/rekomendasi/' . $file_rekom . '.' . $fext2);
+            if ($fz3 > 0) move_uploaded_file($fn3, 'img/pas_foto/' . $file_foto . '.' . $fext3);
+
+            redirect('admin/event_peserta_penataran/' . $_POST['idev']);
+            return;
+        }
+
+        // === Kalau parameter idev tidak dikirim ===
+        if ($idev === false) {
+            return;
+        }
+
+        // === Validasi Event ===
+        $h = $this->db->query(
+            "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND a.id_admin=b.id_admin
+        				LIMIT 0,1",
+            $idev,
+        );
+        if ($h->num_rows() == 0) {
+            $_SESSION['POPUP_MSG'] = 'Data kejurnas tidak ada atau anda tidak berhak mengakses...';
+            $_SESSION['POPUP_CLR'] = 'error';
+            redirect('admin/event/0');
+            return;
+        }
+
+        // === Load Data Event ===
+        $this->data['DtEvent'] = $h->row_array();
+        $stev = $this->data['DtEvent']['status_ev'];
+
+        // === Load Data Tambahan ===
+        $this->data['DtAkomodasi'] = $this->db->query("SELECT * FROM akomodasiev ORDER BY id_akomodasi_ev ASC")->result();
+        $this->data['DtPenataran'] = $this->db->query("SELECT * FROM penataran WHERE id_event=? ORDER BY id_penataran ASC", $idev)->result();
+        $h = $this->db->query('SELECT * FROM provinsi WHERE id_prov=? LIMIT 0,1', $idprov);
+        $this->data['DtProv'] = $h->row_array();
+        // === Render View ===
+        $this->data['MnuAktif'] = 'Event';
+        $this->data['SubMnuAktif'] = 'Event' . $stev;
+
+        $this->load->view('adm_event_peserta_penataran_new', $this->data);
+    }
+
+
+    //Edit peserta
+    public function event_peserta_penataran_edit($idpst = false)
+    {
+        if (isset($_POST['idpst'])) {
+
+            $this->load->model('Mymodel');
+            $holdpst = $this->db->query("SELECT * FROM penataran_peserta WHERE id_peserta=? LIMIT 1", $_POST['idpst']);
+            $dtold = $holdpst->row_array();
+
+            if (!$dtold) {
+                $_SESSION['POPUP_MSG'] = '<p>Data peserta tidak ditemukan...</p>';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('admin/event/0');
+            }
+
+            // === Handle file upload ===
+            // fungsi bantu
+            function handle_upload($input_name, $prefix, $folder, $old_file, $mymodel)
+            {
+                if (!empty($_FILES[$input_name]['name'])) {
+                    $tmp = $_FILES[$input_name]['tmp_name'];
+                    $ext = pathinfo($_FILES[$input_name]['name'], PATHINFO_EXTENSION);
+                    $new_name = $prefix . $mymodel->urut('EID' . strtoupper($prefix), 9999) . '.' . $ext;
+                    $target = $folder . $new_name;
+
+                    // hapus file lama
+                    if (!empty($old_file) && file_exists($folder . $old_file)) {
+                        unlink($folder . $old_file);
+                    }
+
+                    move_uploaded_file($tmp, $target);
+                    return $new_name;
+                } else {
+                    return $old_file; // kalau gak upload baru, pake lama
+                }
+            }
+
+            $file_ktp   = handle_upload('file_ktp',   'KTP', 'img/ktp/', $dtold['file_ktp'], $this->Mymodel);
+            $file_rekom = handle_upload('file_rekom', 'RKM', 'img/rekomendasi/', $dtold['file_rekom'], $this->Mymodel);
+            $file_foto  = handle_upload('file_foto',  'PFT', 'img/pas_foto/', $dtold['file_foto'], $this->Mymodel);
+
+            // === Update database ===
+            $data = [
+                'id_penataran'   => $_POST['id_penataran'],
+                'tempat_lahir'   => $_POST['tempat_lahir'],
+                'tanggal_lahir'  => $_POST['tanggal_lahir'],
+                'nama_peserta'   => $_POST['nama_peserta'],
+                'jenis_kelamin'  => $_POST['jenis_kelamin'],
+                'file_ktp'       => $file_ktp,
+                'file_rekom'     => $file_rekom,
+                'file_foto'      => $file_foto
+            ];
+
+            $this->db->where('id_peserta', $_POST['idpst']);
+            $this->db->update('penataran_peserta', $data);
+
+            redirect('admin/event_peserta_penataran/' . $_POST['idev']);
+        }
+
+        // === Kalau belum submit (tampilan form edit) ===
+        if ($idpst === false) return;
+
+        $hpst = $this->db->query(
+            "SELECT a.*, b.provinsi FROM penataran_peserta AS a, provinsi AS b WHERE a.id_peserta=? 
+        				AND a.id_provinsi=b.id_prov LIMIT 0,1",
+            $idpst,
+        );
+        if ($hpst->num_rows() == 0) {
+            $_SESSION['POPUP_MSG'] = '<p>Data peserta tidak ditemukan...</p>';
+            $_SESSION['POPUP_CLR'] = 'error';
+            redirect('admin/event/0');
+        }
+
+        $this->data['DtPst'] = $hpst->row_array();
+        $hkj = $this->db->query(
+            "SELECT a.*, b.provinsi FROM penataran_peserta AS a, provinsi AS b WHERE a.id_peserta=? 
+        				AND a.id_provinsi=b.id_prov LIMIT 0,1",
+            $idpst,
+        );
+        if ($hkj->num_rows() == 0) {
+            $_SESSION['POPUP_MSG'] = '<p>Data event tidak ditemukan...</p>';
+            $_SESSION['POPUP_CLR'] = 'info';
+            redirect('admin/event/0');
+        }
+
+        $h = $this->db->query(
+            "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND
+        					a.id_admin=b.id_admin LIMIT 0,1",
+            $this->data['DtPst']['id_event'],
+        );
+
+        $this->data['DtEvent'] = $h->row_array();
+        $stev = $this->data['DtEvent']['status_ev'];
+        $this->data['MnuAktif'] = 'Event';
+        $this->data['SubMnuAktif'] = 'Event' . $stev;
+
+        $h = $this->db->query("SELECT * FROM penataran WHERE id_event=? ORDER BY id_penataran ASC", $this->data['DtPst']['id_event']);
+        $this->data['DtPenataran'] = $h->result();
+        $this->load->view('adm_event_peserta_penataran_edit', $this->data);
+    }
+
+    public function event_peserta_penataran_del($idpst = false)
+    {
+        if ($idpst === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM penataran_peserta WHERE id_peserta=? LIMIT 0,1', $idpst);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data peserta tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('admin/event/0');
+            } else {
+                $dt = $h->row_array();
+                $this->db->query('DELETE FROM penataran_peserta WHERE id_peserta=?', $idpst);
+                redirect('admin/event_peserta_penataran/' . $dt['id_event'] . '/' . $dt['id_prov'] . '/scr');
             }
         }
     }
@@ -1883,6 +2236,43 @@ class Admin extends CI_Controller
             $this->data['DtAkomodasiByr'] = $h->result();
             $this->data['JmlAkomodasiByr'] = $h->num_rows();
 
+
+            $id_provinsi = $this->data['DtIuran']['id_prov'];
+            $idev = $this->data['DtIuran']['id_ev'];
+            $this->data['penataran'] = $this->db->query("SELECT 
+    t.id_event,
+    SUM(t.jumlah_peserta * t.biaya) AS total_tagihan,
+    IFNULL(pb.total_bayar, 0) AS total_bayar,
+    (SUM(t.jumlah_peserta * t.biaya) - IFNULL(pb.total_bayar, 0)) AS sisa_tagihan
+FROM (
+    SELECT 
+        pn.id_event,
+        pn.id_penataran,
+        pn.biaya,
+        COUNT(pp.id_peserta) AS jumlah_peserta
+    FROM penataran_peserta pp
+    JOIN penataran pn ON pn.id_penataran = pp.id_penataran
+    WHERE pp.id_provinsi = '$id_provinsi'
+      AND pn.id_event = '$idev'
+    GROUP BY pn.id_penataran, pn.id_event, pn.biaya
+) AS t
+LEFT JOIN (
+    SELECT 
+        id_event,
+        id_provinsi,
+        SUM(jumlah_bayar) AS total_bayar
+    FROM penataran_bayar
+    WHERE id_provinsi = '$id_provinsi'
+      AND id_event = '$idev'
+	  AND status_verifikasi = '1'
+    GROUP BY id_event, id_provinsi
+) AS pb 
+ON pb.id_event = t.id_event
+GROUP BY t.id_event;
+")->row_array();
+            $h = $this->db->query("SELECT * FROM penataran_bayar WHERE id_event = '$idev' AND id_provinsi = $id_provinsi");
+            $this->data['BayarPenataran'] = $h->num_rows();
+            $this->data['BuktiBayarPenataran'] = $h->result();
             $this->data['MnuAktif'] = 'Event';
             $this->data['SubMnuAktif'] = 'Event' . $stev;
             if ($tg == 'scr') {
@@ -1893,133 +2283,121 @@ class Admin extends CI_Controller
         }
     }
 
-    public function event_iuran_detail_tagihan($idiuran = false, $tg = 'scr') 
+    public function event_iuran_detail_tagihan($idiuran = false, $tg = 'scr')
     {
-        $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?",$idiuran)->row_array();
+        $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?", $idiuran)->row_array();
         $idev = $data['id_ev'];
         $idprov = $data['id_prov'];
-        if ($idev===false) { } else
-		{
-			$h=$this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
-			if ($h->num_rows()==0)
-			{
-				$_SESSION['POPUP_MSG']='Data events tidak tersedia...';
-				$_SESSION['POPUP_CLR']='error';
-				redirect('opr/event/0');
-			}
-			else
-			{
-				$this->data['DtEvent']=$h->row_array();
-				$stev=$this->data['DtEvent']['status_ev'];
-				$h=$this->db->query("SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
+        if ($idev === false) {
+        } else {
+            $h = $this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data events tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('opr/event/0');
+            } else {
+                $this->data['DtEvent'] = $h->row_array();
+                $stev = $this->data['DtEvent']['status_ev'];
+                $h = $this->db->query(
+                    "SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
 							 gelarev AS b,  kategoriev AS d,akomodasiev c WHERE a.id_ev=? AND a.id_prov=? AND
 							a.id_gelar_ev=b.id_gelar_ev AND a.id_ktg_ev=d.id_ktg_ev AND a.id_akomodasi_ev=c.id_akomodasi_ev
-							ORDER BY a.nama_pst ASC", 
-							array($idev, $idprov));
-				
-				$this->data['JmlPst']=$h->num_rows();
-				$this->data['DtPst']=$h->result();
-				$this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?",$idprov)->row_array();
-				
-				$this->data['MnuAktif']='Event';
-				$this->data['SubMnuAktif']='Event'.$stev;
-				//echo json_encode($hasil); die();
-				if ($tg=='scr')
-				{
-					$this->load->view('adm_event_iuran_detail_tagihan', $this->data);
-				}
-				else
-				{
-					$this->load->view('adm_event_iuran_detail_tagihan_ctk', $this->data);
-				}
-			}
-		}
+							ORDER BY a.nama_pst ASC",
+                    array($idev, $idprov)
+                );
+
+                $this->data['JmlPst'] = $h->num_rows();
+                $this->data['DtPst'] = $h->result();
+                $this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?", $idprov)->row_array();
+
+                $this->data['MnuAktif'] = 'Event';
+                $this->data['SubMnuAktif'] = 'Event' . $stev;
+                //echo json_encode($hasil); die();
+                if ($tg == 'scr') {
+                    $this->load->view('adm_event_iuran_detail_tagihan', $this->data);
+                } else {
+                    $this->load->view('adm_event_iuran_detail_tagihan_ctk', $this->data);
+                }
+            }
+        }
     }
 
     public function event_akomodasi($idiuran = false, $tg = 'scr')
     {
-         $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?",$idiuran)->row_array();
+        $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?", $idiuran)->row_array();
         $idev = $data['id_ev'];
         $idprov = $data['id_prov'];
-        if ($idev===false) { } else
-		{
-			$h=$this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
-			if ($h->num_rows()==0)
-			{
-				$_SESSION['POPUP_MSG']='Data events tidak tersedia...';
-				$_SESSION['POPUP_CLR']='error';
-				redirect('opr/event/0');
-			}
-			else
-			{
-				$this->data['DtEvent']=$h->row_array();
-				$stev=$this->data['DtEvent']['status_ev'];
-				$h=$this->db->query("SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
+        if ($idev === false) {
+        } else {
+            $h = $this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data events tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('opr/event/0');
+            } else {
+                $this->data['DtEvent'] = $h->row_array();
+                $stev = $this->data['DtEvent']['status_ev'];
+                $h = $this->db->query(
+                    "SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
 							 gelarev AS b,  kategoriev AS d,akomodasiev c WHERE a.id_ev=? AND a.id_prov=? AND
 							a.id_gelar_ev=b.id_gelar_ev AND a.id_ktg_ev=d.id_ktg_ev AND a.id_akomodasi_ev=c.id_akomodasi_ev
-							ORDER BY a.nama_pst ASC", 
-							array($idev, $idprov));
-				
-				$this->data['JmlPst']=$h->num_rows();
-				$this->data['DtPst']=$h->result();
-				$this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?",$idprov)->row_array();
-				
-				$this->data['MnuAktif']='Event';
-				$this->data['SubMnuAktif']='Event'.$stev;
-				//echo json_encode($hasil); die();
-				if ($tg=='scr')
-				{
-					$this->load->view('adm_event_akomodasi', $this->data);
-				}
-				else
-				{
-					$this->load->view('adm_event_akomodasi_ctk', $this->data);
-				}
-			}
-		}
+							ORDER BY a.nama_pst ASC",
+                    array($idev, $idprov)
+                );
+
+                $this->data['JmlPst'] = $h->num_rows();
+                $this->data['DtPst'] = $h->result();
+                $this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?", $idprov)->row_array();
+
+                $this->data['MnuAktif'] = 'Event';
+                $this->data['SubMnuAktif'] = 'Event' . $stev;
+                //echo json_encode($hasil); die();
+                if ($tg == 'scr') {
+                    $this->load->view('adm_event_akomodasi', $this->data);
+                } else {
+                    $this->load->view('adm_event_akomodasi_ctk', $this->data);
+                }
+            }
+        }
     }
 
     public function event_registrasi($idiuran = false, $tg = 'scr')
     {
-         $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?",$idiuran)->row_array();
+        $data = $this->db->query("SELECT * FROM iuranev WHERE id_iuran_ev=?", $idiuran)->row_array();
         $idev = $data['id_ev'];
         $idprov = $data['id_prov'];
-        if ($idev===false) { } else
-		{
-			$h=$this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
-			if ($h->num_rows()==0)
-			{
-				$_SESSION['POPUP_MSG']='Data events tidak tersedia...';
-				$_SESSION['POPUP_CLR']='error';
-				redirect('opr/event/0');
-			}
-			else
-			{
-				$this->data['DtEvent']=$h->row_array();
-				$stev=$this->data['DtEvent']['status_ev'];
-				$h=$this->db->query("SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
+        if ($idev === false) {
+        } else {
+            $h = $this->db->query("SELECT a.*,b.nama_admin FROM events a,admin b WHERE a.id_ev=? AND a.id_admin=b.id_admin LIMIT 0,1", $idev);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data events tidak tersedia...';
+                $_SESSION['POPUP_CLR'] = 'error';
+                redirect('opr/event/0');
+            } else {
+                $this->data['DtEvent'] = $h->row_array();
+                $stev = $this->data['DtEvent']['status_ev'];
+                $h = $this->db->query(
+                    "SELECT a.*, d.kategori, b.gelar, b.biaya_reg,c.biaya FROM pesertaev AS a, 
 							 gelarev AS b,  kategoriev AS d,akomodasiev c WHERE a.id_ev=? AND a.id_prov=? AND
 							a.id_gelar_ev=b.id_gelar_ev AND a.id_ktg_ev=d.id_ktg_ev AND a.id_akomodasi_ev=c.id_akomodasi_ev
-							ORDER BY a.nama_pst ASC", 
-							array($idev, $idprov));
-				
-				$this->data['JmlPst']=$h->num_rows();
-				$this->data['DtPst']=$h->result();
-				$this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?",$idprov)->row_array();
-				
-				$this->data['MnuAktif']='Event';
-				$this->data['SubMnuAktif']='Event'.$stev;
-				//echo json_encode($hasil); die();
-				if ($tg=='scr')
-				{
-					$this->load->view('adm_event_registrasi', $this->data);
-				}
-				else
-				{
-					$this->load->view('adm_event_registrasi_ctk', $this->data);
-				}
-			}
-		}
+							ORDER BY a.nama_pst ASC",
+                    array($idev, $idprov)
+                );
+
+                $this->data['JmlPst'] = $h->num_rows();
+                $this->data['DtPst'] = $h->result();
+                $this->data['DtProvinsi'] = $this->db->query("SELECT * FROM provinsi WHERE id_prov=?", $idprov)->row_array();
+
+                $this->data['MnuAktif'] = 'Event';
+                $this->data['SubMnuAktif'] = 'Event' . $stev;
+                //echo json_encode($hasil); die();
+                if ($tg == 'scr') {
+                    $this->load->view('adm_event_registrasi', $this->data);
+                } else {
+                    $this->load->view('adm_event_registrasi_ctk', $this->data);
+                }
+            }
+        }
     }
 
     //IURAN BAYAR
@@ -2233,6 +2611,218 @@ class Admin extends CI_Controller
             redirect('admin/event_iuran_detail/' . $dtbyr['id_iuran_ev']);
         }
     }
+
+    // CC
+    public function event_penataran_byr_detail($idbyr = false, $tg = 'scr')
+    {
+        if ($idbyr === false) {
+        } else {
+            $h = $this->db->query(
+                "SELECT a.*, b.provinsi, c.nama_admin FROM penataran_bayar AS a, provinsi AS b, 
+        			admin AS c WHERE a.id_pembayaran=? AND a.id_provinsi=b.id_prov AND a.id_admin=c.id_admin LIMIT 1",
+                $idbyr,
+            );
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+            $this->data['DtBayar'] = $h->row_array();
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? 
+        				AND a.id_admin=b.id_admin LIMIT 0,1",
+                $this->data['DtBayar']['id_event'],
+            );
+            $this->data['DtEvent'] = $h->row_array();
+            $stev = $this->data['DtEvent']['status_ev'];
+            $this->data['MnuAktif'] = 'Event';
+            $this->data['SubMnuAktif'] = 'Event' . $stev;
+            if ($tg == 'scr') {
+                $this->load->view('adm_event_penataran_byr_detail', $this->data);
+            } else {
+                $this->load->view('adm_event_penataran_byr_detail_ctk', $this->data);
+            }
+        }
+    }
+
+    public function event_penataran_byr_new($idiuran = false)
+    {
+        if (isset($_POST['jenisbyr'])) {
+            $fn = $_FILES['bukti']['tmp_name'];
+            $fz = $_FILES['bukti']['size'];
+            $fext = pathinfo($_FILES['bukti']['name'], PATHINFO_EXTENSION);
+            $hiuranev = $this->db->query('SELECT * FROM iuranev WHERE id_iuran_ev=? LIMIT 0, 1', $_POST['idiuran']);
+            $dtiuran = $hiuranev->row_array();
+            $this->load->model('Mymodel');
+            $idbyr = 'BE' . $this->Mymodel->urut('EIDBYREV', 9999);
+            $p = [$idbyr, $_POST['idev'], $dtiuran['id_iuran_ev'], $dtiuran['id_prov'], 1, 1, $_POST['tglbayar'], $_POST['jmlbayar'], $_POST['jenisbyr'], $_POST['carabyr'], $_POST['namapembayar'], '', $_POST['daribank'], $_POST['darirek'], $_POST['namapenerima'], $_POST['catatan'], $_POST['kebank'], $_POST['kerek'], $idbyr . '.' . $fext, '', 0];
+            $h = $this->db->query(
+                "INSERT INTO iuranev_byr (id_byr, id_ev, id_iuran_ev, id_prov, id_operator, id_admin, tgl_bayar,
+        				jml_bayar, jenis_byr, cara_byr, nama_pembayar, note_pembayar, dari_bank, dari_rek, nama_penerima, note_penerima,
+        				ke_bank, ke_rek,bukti, tgl_verifikasi, status_verifikasi) VALUES (?, ?, ?, ?, ?, ?,?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                $p,
+            );
+
+            if ($fz > 0) {
+                move_uploaded_file($fn, 'img/bayar/' . $idbyr . '.' . $fext);
+            }
+            $this->hitung_iuran_ev($_POST['idev']);
+            redirect('admin/event_iuran_detail/' . $_POST['idiuran']);
+        }
+
+        if ($idiuran === false) {
+        } else {
+            $hi = $this->db->query(
+                "SELECT a.*, b.provinsi FROM iuranev AS a, provinsi AS b WHERE a.id_iuran_ev=? AND
+        				a.id_prov=b.id_prov LIMIT 0,1",
+                $idiuran,
+            );
+            if ($hi->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+
+            $this->data['DtIuran'] = $hi->row_array();
+            unset($hi);
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND 
+        				a.id_admin=b.id_admin LIMIT 0,1",
+                $this->data['DtIuran']['id_ev'],
+            );
+            $this->data['DtEvent'] = $h->row_array();
+            $stev = $this->data['DtEvent']['status_ev'];
+            unset($h);
+            $this->data['MnuAktif'] = 'Event';
+            $this->data['SubMnuAktif'] = 'Event' . $stev;
+            $this->load->view('adm_event_iuran_byr_new', $this->data);
+        }
+    }
+
+    public function event_penataran_byr_edit($idiuran = false)
+    {
+        if (isset($_POST['idbyr'])) {
+            //**************** DINISI
+            $fn = $_FILES['bukti']['tmp_name'];
+            $fz = $_FILES['bukti']['size'];
+            $fext = pathinfo($_FILES['bukti']['name'], PATHINFO_EXTENSION);
+
+
+            if ($fz > 0) {
+                $p = [$_POST['tglbayar'], $_POST['jmlbayar'], $_POST['jenisbyr'], $_POST['carabyr'], $_POST['namapembayar'], $_POST['catatan'], $_POST['daribank'], $_POST['darirek'], $_POST['idbyr'] . '.' . $fext, $_POST['idbyr']];
+                $this->db->query(
+                    "UPDATE iuranev_byr SET tgl_bayar=?, jml_bayar=?, jenis_byr=?, cara_byr=?, 
+        				nama_pembayar=?, note_pembayar=?, dari_bank=?, dari_rek=?,bukti=?  WHERE id_byr=?",
+                    $p,
+                );
+                move_uploaded_file($fn, 'img/bayar/' . $_POST['idbyr'] . '.' . $fext);
+            } else {
+                $p = [$_POST['tglbayar'], $_POST['jmlbayar'], $_POST['jenisbyr'], $_POST['carabyr'], $_POST['namapembayar'], $_POST['catatan'], $_POST['daribank'], $_POST['darirek'], $_POST['idbyr']];
+                $this->db->query(
+                    "UPDATE iuranev_byr SET tgl_bayar=?, jml_bayar=?, jenis_byr=?, cara_byr=?, 
+        				nama_pembayar=?, note_pembayar=?, dari_bank=?, dari_rek=?  WHERE id_byr=?",
+                    $p,
+                );
+            }
+            $this->hitung_iuran_ev($_POST['idev']);
+            redirect('admin/event_iuran_detail/' . $_POST['idiuran']);
+        }
+
+        if ($idiuran === false) {
+        } else {
+            $h = $this->db->query(
+                "SELECT a.*, b.provinsi FROM iuranev_byr AS a, provinsi AS b WHERE a.id_byr=? AND
+        				a.id_prov=b.id_prov LIMIT 0,1",
+                $idiuran,
+            );
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+            $this->data['DtIuran'] = $h->row_array();
+            $h = $this->db->query(
+                "SELECT a.*, b.nama_admin FROM events AS a, admin AS b WHERE a.id_ev=? AND 
+        				a.id_admin=b.id_admin LIMIT 0,1",
+                $this->data['DtIuran']['id_ev'],
+            );
+            $this->data['DtEvent'] = $h->row_array();
+            $stev = $this->data['DtEvent']['status_ev'];
+
+            $stev = $this->data['DtEvent']['status_ev'];
+            $this->data['MnuAktif'] = 'Event';
+            $this->data['SubMnuAktif'] = 'Event' . $stev;
+            $this->load->view('adm_event_iuran_byr_edit', $this->data);
+        }
+    }
+
+    //verfikasi pembayarn
+    public function event_penataran_byr_verdo($idbyr = false)
+    {
+        if ($idbyr === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM penataran_bayar WHERE id_pembayaran=? LIMIT 0,1', $idbyr);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+            $dtbyr = $h->row_array();
+            $p = [$_SESSION['ID_ADMIN'], date('Y-m-d'), $idbyr];
+            $this->db->query('UPDATE penataran_bayar SET id_admin=?, status_verifikasi=1, tanggal_verifikasi=? WHERE id_pembayaran=?', $p);
+            $this->hitung_iuran_ev($dtbyr['id_event'], $dtbyr['id_provinsi']);
+
+            redirect('admin/event_iuran/' . $dtbyr['id_event']);
+        }
+    }
+
+    //Batalkan verfikasi
+    public function event_penataran_byr_unver($idbyr = false)
+    {
+        if ($idbyr === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM penataran_bayar WHERE id_pembayaran=? LIMIT 0,1', $idbyr);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+            $dtbyr = $h->row_array();
+            $this->db->query("UPDATE penataran_bayar SET id_admin=1, status_verifikasi=0, tanggal_verifikasi='' WHERE id_pembayaran=?", $idbyr);
+            $this->hitung_iuran_ev($dtbyr['id_event']);
+
+            redirect('admin/event_iuran/' . $dtbyr['id_event']);
+        }
+    }
+
+    //Hapus pembayaran
+    public function event_penataran_byr_del($idbyr = false)
+    {
+        if (idbyr === false) {
+        } else {
+            $h = $this->db->query('SELECT * FROM iuranev_byr WHERE id_byr=? LIMIT 0,1', $idbyr);
+            if ($h->num_rows() == 0) {
+                $_SESSION['POPUP_MSG'] = 'Data iuran  tidak ada...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event/0');
+            }
+            $dtbyr = $h->row_array();
+            if ($dtbyr['status_verifikasi'] == 1) {
+                $_SESSION['POPUP_MSG'] = 'Pembayaran sudah diverifikasi, tidak bisa dihapus...';
+                $_SESSION['POPUP_CLR'] = 'info';
+                redirect('admin/event_iuran_detail/' . $dtbyr['id_iuran_ev']);
+            }
+            $this->db->query('DELETE FROM iuranev_byr WHERE id_byr=?', $idbyr);
+            $fn = './img/bayar/' . $idbyr . '.jpg';
+            if (file_exists($fn)) {
+                unlink($fn);
+            }
+            $this->hitung_iuran_ev($dtbyr['id_ev']);
+
+            redirect('admin/event_iuran_detail/' . $dtbyr['id_iuran_ev']);
+        }
+    }
+
 
     //PENERIMAAN LAIN
     public function event_penlain($idev = false, $tg = 'scr')
@@ -2654,6 +3244,13 @@ class Admin extends CI_Controller
                     $d['jmlpenlain'] = 0;
                 }
                 $this->data['JmlPenLain'] = $d['jmlpenlain'];
+                // Penataran
+                $h = $this->db->query("SELECT SUM(jumlah_bayar) AS jumlah FROM penataran_bayar WHERE id_event=?",$idev);
+                $d = $h->row_array();
+                if ($d['jumlah'] == null){
+                    $d['jumlah'] = 0;
+                }
+                $this->data['JmlPenataran'] = $d['jumlah'];
                 //pengeluaran kas
                 $h = $this->db->query('SELECT SUM(jumlah) AS jmlkaskeluar FROM kaskeluarev WHERE id_ev=?', $idev);
                 $d = $h->row_array();
@@ -2663,7 +3260,7 @@ class Admin extends CI_Controller
                 $this->data['JmlKasKeluar'] = $d['jmlkaskeluar'];
 
                 $this->data['JmlPenerimaan'] = $this->data['JmlIuranWjb'] + $this->data['JmlIuranReg'] + $this->data['JmlPenLain'] + $this->data['JmlAkomodasi'];
-                $saldokas = $this->data['JmlIuranWjb'] + $this->data['JmlIuranReg'] + $this->data['JmlPenLain'] + $this->data['JmlAkomodasi'] - $this->data['JmlKasKeluar'];
+                $saldokas = $this->data['JmlIuranWjb'] + $this->data['JmlIuranReg'] + $this->data['JmlPenLain'] + $this->data['JmlAkomodasi'] + $this->data['JmlPenataran'] - $this->data['JmlKasKeluar'];
 
                 $this->data['SaldoKas'] = $saldokas;
                 $this->data['MnuAktif'] = 'Event';
@@ -2874,6 +3471,7 @@ class Admin extends CI_Controller
     //Slide
     public function slide()
     {
+        $this->data['foto'] = $this->db->query("SELECT * FROM slide")->result();
         $this->data['MnuAktif'] = 'MnuWeb';
         $this->data['SubMnuAktif'] = 'slide';
         $this->load->view('adm_slide', $this->data);
@@ -2885,8 +3483,35 @@ class Admin extends CI_Controller
             $id = $_POST['id'];
             $fn = $_FILES['foto']['tmp_name'];
             $fz = $_FILES['foto']['size'];
+
+            // Cek apakah ada file yang diupload (ukuran lebih dari 0)
             if ($fz > 0) {
-                move_uploaded_file($fn, 'img/slide_' . $id . '.jpg');
+                // 1. Ambil nama file foto lama dari database
+                $query = $this->db->query('SELECT foto FROM slide WHERE id = ?', array($id));
+                $row = $query->row();
+                $foto_lama = $row ? $row->foto : null;
+
+                // 2. Tentukan path file lama dan path tujuan file baru
+                $path_upload = 'img/slide/';
+                $file_lama_path = FCPATH . $path_upload . $foto_lama;
+
+                // 3. Hapus foto lama jika ada
+                if ($foto_lama && file_exists($file_lama_path)) {
+                    unlink($file_lama_path);
+                }
+
+                // 4. Proses upload foto baru
+                $rand = rand(0, 9999);
+                $fext = pathinfo($_FILES['foto']['name'], PATHINFO_EXTENSION);
+                $nama_file_baru = $rand . '.' . $fext;
+                $ft = $path_upload . $nama_file_baru;
+
+                // 5. Update database dengan nama file baru
+                $p = [$nama_file_baru, $id];
+                $this->db->query('UPDATE slide SET foto=? WHERE id=?', $p);
+
+                // 6. Pindahkan file yang diupload
+                move_uploaded_file($fn, FCPATH . $ft);
             }
         }
         redirect('admin/slide');

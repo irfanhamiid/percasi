@@ -390,7 +390,124 @@ include ('adm_awal.php'); ?>
 			<?php
 		}
 		?>
+		<p class="p-2 bg-light"><b>PENATARAN</b></p>
+		<div class="row mb-4">
+			<div class="col-sm-4">
+				<?php if($penataran != null){ ?>
+				Jumlah Iuran: <span class="float-end"><b><?= number_format($penataran['total_tagihan'],0,',','.');?></b></span>
+				<?php }else{ ?>
+				Jumlah Iuran: <span class="float-end"><b><?= number_format(0,0,',','.');?></b></span>
+				<?php } ?>
+			</div>
+			<div class="col-sm-4">
+				<?php if($penataran != null){ ?>
+				Dibayar: <span class="float-end"><b><?= number_format($penataran['total_bayar'],0,',','.');?></b></span>
+				<?php }else{ ?>
+				Dibayar: <span class="float-end"><b><?= number_format(0,0,',','.');?></b></span>
+				<?php } ?>
+			</div>
+			<div class="col-sm-4">
+				<?php if($penataran != null){ ?>
+				Kurang Bayar: <span class="float-end"><b><?= number_format($penataran['sisa_tagihan'],0,',','.');?></b></span>
+				<?php }else{ ?>
+				Kurang Bayar: <span class="float-end"><b><?= number_format(0,0,',','.');?></b></span>
+				<?php } ?>
+			</div>
+		</div>
 		
+		<?php
+		if ($BayarPenataran==0)
+		{
+			echo '<div class="alert alert-danger">Belum ada pembayaran iuran...</div>';
+		}
+		else	
+		{
+			?>
+			<table class="table">
+				<thead><tr><th>NO</th><th>TGL. BAYAR</th><th class="text-end">JML BAYAR</th><th>STATUS</th>
+					<th>AKSI</th></tr></thead>
+				<tbody>
+				<?php
+				$n=1;
+				foreach ($BuktiBayarPenataran as $k)
+				{
+					?>
+					<tr><td><?= $n;?></td>
+						<td><?= $CI->Mymodel->tgldmy($k->tanggal_bayar);?></td>
+						<td class="text-end"><?= number_format($k->jumlah_bayar,0,',','.');?></td>
+						<td><span class="badge bg-<?= $stbayarcl[$k->status_verifikasi];?>">
+							<?= $stbayar[$k->status_verifikasi];?></span>
+							<?php $atmin = $this->db->query("SELECT * FROM admin WHERE id_admin=$k->id_admin")->row();
+							if ($k->status_verifikasi==1)
+							{
+								echo '<br/> Oleh : '.$atmin->nama_admin;
+							}
+							?>	
+						</td>
+						<td>
+							
+							<?php
+							if ($DtEvent['status_ev']!=2)
+							{
+								?>
+								<div class="btn-group">
+								  
+								  <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Aksi</button>
+								  <ul class="dropdown-menu">
+									<li><a class="dropdown-item" 
+										href="<?= base_url();?>admin/event_penataran_byr_detail/<?= $k->id_pembayaran;?>/scr">
+										<i class="mdi mdi-magnify"></i> Detail</a></li>
+									<?php
+									if ($k->status_verifikasi==0)
+									{
+										?>
+										<!-- <li><a class="dropdown-item" 
+											href="<?= base_url();?>admin/event_penataran_byr_edit/<?= $k->id_pembayaran;?>">
+											<i class="mdi mdi-pencil"></i> Edit</a></li> -->
+										<li><a class="dropdown-item" 
+											href="<?= base_url();?>admin/event_penataran_byr_verdo/<?= $k->id_pembayaran;?>">
+											<i class="mdi mdi-check"></i> Verifikasi</a></li>
+											<?php if($_SESSION['TP_ADMIN']==3) { ?>
+										<li>
+											<a href="#" class="dropdown-item text-danger"  title="Hapus"
+											onclick="return hapus('<?= $k->id_pembayaran;?>','<?= $k->tanggal_bayar;?>, sebesar 
+											<?= number_format($k->jumlah_bayar,0,',','.');?>');">
+													<i class="mdi mdi-trash-can"></i> Hapus</a></li>
+													<?php } ?>
+										<?php
+									}
+									if (($_SESSION['TP_ADMIN']==3) && ($k->status_verifikasi==1) )
+									{
+										?>
+										<li><a class="dropdown-item" 
+											href="<?= base_url();?>admin/event_penataran_byr_unver/<?= $k->id_pembayaran;?>">
+											<i class="mdi mdi-cancel"></i> Batalkan verifikasi</a></li>
+										<?php
+									}
+									?>	
+								  </ul>
+								</div>
+							<?php
+							}
+							else
+							{
+								?>
+								<a class="btn btn-info btn-xs" 
+									href="<?= base_url();?>admin/event_iuran_byr_detail/<?= $k->id_byr;?>/scr">
+									<i class="mdi mdi-magnify"></i> Detail</a>
+								<?php
+							}
+							?>
+						</td>
+					</tr>
+					<?php
+				}
+				?>
+				</tbody>
+			</table>
+			<?php
+		}
+		?>
   </div>
 </div>
 <script>
